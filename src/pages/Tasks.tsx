@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
+import { useTasks } from "@/hooks/useTasks";
+import { useProjects } from "@/hooks/useProjects";
 
 const tasks = [
   {
@@ -112,13 +115,18 @@ export default function Tasks() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const { tasks, loading, updateTask } = useTasks();
+
+  const handleToggleComplete = async (taskId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'completed' ? 'todo' : 'completed';
+    await updateTask(taskId, { status: newStatus });
+  };
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.project.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || task.status.toLowerCase() === statusFilter.toLowerCase();
-    const matchesPriority = priorityFilter === "all" || task.priority.toLowerCase() === priorityFilter.toLowerCase();
+                         (task.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
+    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+    const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
@@ -221,10 +229,7 @@ export default function Tasks() {
           <h1 className="text-3xl font-bold text-foreground">Tasks</h1>
           <p className="text-muted-foreground">Manage and track all your tasks across projects</p>
         </div>
-        <Button className="bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-md">
-          <Plus className="w-4 h-4 mr-2" />
-          New Task
-        </Button>
+        <CreateTaskDialog />
       </div>
 
       {/* Filters */}
